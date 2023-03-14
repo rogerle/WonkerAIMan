@@ -6,7 +6,7 @@ bin-release/
 # Other files and folders
 .settings/
 .idea/
-
+venv/
 # Executables
 *.swf
 *.air
@@ -16,3 +16,10 @@ bin-release/
 # Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
 # should NOT be excluded as they contain compiler settings and other important
 # information for Eclipse / Flash Builder.
+/data/pretrain_models/fastspeech2_male_mix_ckpt_1.4.0/
+/data/pretrain_models/pwg_male_ckpt_1.4.0/
+/data/nltk_data/
+/output/00001.wav
+/output/00002.wav
+/output/00003.wav
+/data/source/audio.wav

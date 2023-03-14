@@ -16,7 +16,8 @@ https://visualstudio.microsoft.com/visual-cpp-build-tools/
 ```
 下载解压nltk_data放入data目录
 ```shell
-https://paddlespeech.bj.bcebos.com/Parakeet/tools/nltk_data.tar.gz
+wget https://paddlespeech.bj.bcebos.com/Parakeet/tools/nltk_data.tar.gz
+unzip nltk_data.tar.gz ./data/nltk_data
 ```
 
 ##安装paddle
