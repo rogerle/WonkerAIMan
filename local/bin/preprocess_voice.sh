@@ -3,4 +3,8 @@
 set -e
 source path.sh
 
-##利用
+am_models_path
+
+voc_model_checkpoints_path
+voc_model_conf
+##
