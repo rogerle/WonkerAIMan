@@ -22,8 +22,8 @@ then
     am_speech_stats=${am_fs2_male_mix}/speech_stats.npy
   else
      echo "模型不存在，下载模型"${fs2_male_mix};
-     exec wget -P ${models_path} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_male_mix_ckpt_1.4.0.zip
-     exec unzip -x -d ${models_path} ${am_fs2_male_mix}.zip
+     wget -P ${models_path} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_male_mix_ckpt_1.4.0.zip
+     unzip -x -d ${models_path} ${am_fs2_male_mix}.zip
   fi
 fi
 if [ ${voc_models} == "hifigan_male" ];
@@ -35,8 +35,8 @@ then
     voc_spk_id=${voc_hifigan_male}/speaker_id_map.txt
   else
      echo "模型不存在，下载模型"${voc_hifigan_male};
-     #exec wget -P ${models_path} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/hifigan/hifigan_male_ckpt_1.4.0.zip
-     exec unzip -x -d ${models_path} ${voc_hifigan_male}.zip
+     wget -P ${models_path} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/hifigan/hifigan_male_ckpt_1.4.0.zip
+     unzip -x -d ${models_path} ${voc_hifigan_male}.zip
   fi
 fi
 
