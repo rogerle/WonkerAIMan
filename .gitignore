@@ -23,3 +23,5 @@ venv/
 /output/00002.wav
 /output/00003.wav
 /data/source/audio.wav
+/data/pretrain_models/fastspeech2_male_mix_ckpt_1.4.0.zip
+/data/pretrain_models/hifigan_male_ckpt_1.4.0.zip
