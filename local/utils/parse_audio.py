@@ -15,12 +15,10 @@ import logging
 
 logging.getLogger("PaddleSpeech").setLevel(logging.WARNING)
 def split_wav(input_dir: Union[str,Path],
-              output_dir: Union[str,Path],
-              labels_txt: Union[str,Path]
+              output_dir: Union[str,Path]
               ):
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
-    labels_txt = Path(labels_txt)
     print(input_dir)
     f_list = os.listdir(input_dir)
     for file in f_list:
@@ -71,16 +69,8 @@ def asr_wav(wavefile):
         config=None,  # Set `config` and `ckpt_path` to None to use pretrained model.
         ckpt_path=None,
         audio_file=wavefile,
-        force_yes=True,
-        device=paddle.get_device())
+        force_yes=True)
     return text
-
-
-#生成拼音标签
-def gen_label_txt(label_txt):
-    result = lazy_pinyin(label_txt, style=Style.TONE3, neutral_tone_with_five=True)
-    return result
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -98,18 +88,10 @@ if __name__ == '__main__':
         default="../../output/splits",
         help="directory split audio")
 
-    parser.add_argument(
-        "--labels_txt",
-        type=str,
-        default="../../output/splits",
-        help="directory split audio")
-
     args = parser.parse_args()
 
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
-    labels_txt = Path(args.labels_txt)
     split_wav(
         input_dir=input_dir,
-        output_dir=output_dir,
-        labels_txt=labels_txt)
+        output_dir=output_dir)

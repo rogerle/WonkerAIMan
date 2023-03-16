@@ -19,21 +19,21 @@ from typing import Dict
 from typing import List
 from typing import Union
 
-DICT_EN = 'tools/aligner/cmudict-0.7b'
-DICT_ZH = 'tools/aligner/simple.lexicon'
-MODEL_DIR_EN = 'tools/aligner/vctk_model'
-MODEL_DIR_ZH = 'tools/aligner/aishell3_model'
-MFA_PHONE_EN = 'tools/aligner/vctk_model/meta.yaml'
-MFA_PHONE_ZH = 'tools/aligner/aishell3_model/meta.yaml'
-MFA_PATH = 'tools/montreal-forced-aligner/bin'
+DICT_EN = 'local/tools/aligner/cmudict-0.7b'
+DICT_ZH = 'local/tools/aligner/simple.lexicon'
+MODEL_DIR_EN = 'local/tools/aligner/vctk_model'
+MODEL_DIR_ZH = 'local/tools/aligner/aishell3_model'
+MFA_PHONE_EN = 'local/tools/aligner/vctk_model/meta.yaml'
+MFA_PHONE_ZH = 'local/tools/aligner/aishell3_model/meta.yaml'
+MFA_PATH = 'local/tools/montreal-forced-aligner/bin'
 os.environ['PATH'] = MFA_PATH + '/:' + os.environ['PATH']
 
 
 def check_phone(label_file: Union[str, Path],
-                pronunciation_phones: Dict[str, str],
+                pronunciation_phones: Dict[str, List[str]],
                 mfa_phones: List[str],
                 am_phones: List[str],
-                oov_record: str="./oov_info.txt",
+                oov_record: str="exp/oov_info.txt",
                 lang: str="zh"):
     """Check whether the phoneme corresponding to the audio text content 
     is in the phoneme list of the pretrained mfa model to ensure that the alignment is normal.
@@ -166,7 +166,7 @@ def get_check_result(label_file: Union[str, Path],
         oov_record="./oov_info.txt",
         lang=lang)
 
-    input_dir = Path(input_dir).expanduser()
+    input_dir = Path(input_dir)
     new_dir = input_dir / newdir_name
     new_dir.mkdir(parents=True, exist_ok=True)
     with open(label_file, "r") as f:
@@ -190,13 +190,13 @@ if __name__ == '__main__':
     parser.add_argument(
         "--input_dir",
         type=str,
-        default="./input/csmsc_mini",
+        default="./output/csmsc_mini",
         help="directory containing audio and label file")
 
     parser.add_argument(
         "--pretrained_model_dir",
         type=str,
-        default="./pretrained_models/fastspeech2_aishell3_ckpt_1.1.0",
+        default="./data/pretarin_models/fastspeech2_aishell3_ckpt_1.1.0",
         help="Path to pretrained model")
 
     parser.add_argument(
@@ -224,8 +224,8 @@ if __name__ == '__main__':
     #     print('please input right lang!!')
     assert args.lang == "zh" or args.lang == "en", "please input right lang! zh or en"
 
-    input_dir = Path(args.input_dir).expanduser()
-    pretrained_model_dir = Path(args.pretrained_model_dir).expanduser()
+    input_dir = Path(args.input_dir)
+    pretrained_model_dir = Path(args.pretrained_model_dir)
     am_phone_file = pretrained_model_dir / "phone_id_map.txt"
     label_file = input_dir / "labels.txt"
 
