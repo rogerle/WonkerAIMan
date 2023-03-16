@@ -30,7 +30,7 @@ def split_wav(input_dir: Union[str,Path],
             aud = AudioSegment.from_wav(file)
             loudness = aud.dBFS
             chunks = split_on_silence(aud,
-                                      min_silence_len=2000,
+                                      min_silence_len=1500,
                                       silence_thresh=loudness - 6,
                                       keep_silence=True,
                                       seek_step=1
@@ -42,23 +42,23 @@ def split_wav(input_dir: Union[str,Path],
             split_dir.mkdir(parents=True,exist_ok=True)
 
             #分割音频文件
-            temp_py_word = []
+            temp_cont_word = []
             for i, chunk in enumerate(chunks):
                 chunk.export("{0}/{1:05}.wav".format(split_dir, i + 1), format="wav")
                 audio_44k, sr = librosa.load("{0}/{1:05}.wav".format(split_dir, i + 1),44100)
                 audio_16K = librosa.resample(audio_44k,orig_sr=sr,target_sr=16000)
                 sf.write("{0}/{1:05}.wav".format(split_dir, i + 1),audio_16K,16000)
                 print("chunk file {0:05}.wav".format(i+1))
-                temp_py_word.append(asr_wav("{0}/{1:05}.wav".format(split_dir, i + 1)))
+                temp_cont_word.append(asr_wav("{0}/{1:05}.wav".format(split_dir, i + 1)))
             print("exported {0} chunks.".format(i + 1))
-            line_num = i
             #分割的音频转文字
             content_txt = Path(split_dir).joinpath("content.txt")
 
-            with open(content_txt,"w") as f:
-                for line in temp_py_word:
+            with open(content_txt,"w",encoding='utf-8') as f:
+                for line in temp_cont_word:
                     f.write(line+"\n")
             f.close()
+
 
 
 #语音识别出结果
@@ -74,10 +74,12 @@ def asr_wav(wavefile):
         force_yes=True,
         device=paddle.get_device())
     return text
-def gen_label_txt(labels_txt):
 
-    result = lazy_pinyin(labels_txt, style=Style.TONE3, neutral_tone_with_five=True)
-    print(' '.join(result))
+
+#生成拼音标签
+def gen_label_txt(label_txt):
+    result = lazy_pinyin(label_txt, style=Style.TONE3, neutral_tone_with_five=True)
+    return result
 
 
 if __name__ == '__main__':

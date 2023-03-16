@@ -1,3 +1,4 @@
+pip install paddleaudio==1.0.1
 paddlepaddle-gpu==2.4.2.post117 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
 paddlespeech
 paddlehub
