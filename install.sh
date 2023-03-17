@@ -5,6 +5,7 @@ source path.sh
 
 
 PRE_AM_TRAIN_MODEL="fs2_cmscm" #参数可以设置成（fs2_aishell3,fs2_cmscm,fs2_mix,fs2_vctk）
+PRE_MODEL_DIR=data/pretrain_models
 
 if [ ${PRE_AM_TRAIN_MODEL} == "fs2_aishell3" ];
 then
@@ -12,7 +13,7 @@ then
 
   if [ ! -d ${PRE_MODEL_DIR} ];
   then
-    wget -P ${PRE_MODEL_DIR} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_aishell3_ckpt_1.1.0.zip
+    wget -Pb ${PRE_MODEL_DIR} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_aishell3_ckpt_1.1.0.zip
     unzip -d ${PRE_MODEL_DIR} ${PRE_MODEL_DIR}/fastspeech2_aishell3_ckpt_1.1.0.zip
 
   fi
@@ -20,10 +21,11 @@ then
 elif  [ ${PRE_AM_TRAIN_MODEL} == "fs2_cmscm" ];
 then
   PRE_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_nosil_baker_ckpt_0.4
+  echo ${PRE_MODEL_DIR}
 
   if [ ! -d ${PRE_MODEL_DIR} ];
   then
-    wget -P ${PRE_MODEL_DIR} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_nosil_baker_ckpt_0.4.zip
+    wget -Pb ${PRE_MODEL_DIR} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_nosil_baker_ckpt_0.4.zip
     unzip -d ${PRE_MODEL_DIR} ${PRE_MODEL_DIR}/fastspeech2_nosil_baker_ckpt_0.4.zip
 
   fi
@@ -34,7 +36,7 @@ then
 
   if [ ! -d ${PRE_MODEL_DIR} ];
   then
-    wget -P ${PRE_MODEL_DIR} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_mix_ckpt_1.2.0.zip
+    wget -Pb ${PRE_MODEL_DIR} https://paddlespeech.bj.bcebos.com/Parakeet/released_models/fastspeech2/fastspeech2_mix_ckpt_1.2.0.zip
     unzip -d ${PRE_MODEL_DIR} ${PRE_MODEL_DIR}/fastspeech2_mix_ckpt_1.2.0
 
   fi
