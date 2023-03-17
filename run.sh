@@ -26,7 +26,7 @@ PRE_MODEL_DIR=data/pretrain_models
 LANG='zh'
 
 #define model parameters
-if [ ${PRE_AM_TRAIN_MODEL} == "fs2_aishell3" ] || [${PRE_AM_TRAIN_MODEL} == "fs2_cmscm" ];
+if [ ${PRE_AM_TRAIN_MODEL} == "fs2_aishell3" ] || [ ${PRE_AM_TRAIN_MODEL} == "fs2_cmscm" ];
 then
   PRE_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_aishell3_ckpt_1.1.0
 fi
@@ -41,7 +41,11 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "###################################"
     echo "#   STEP 1.分割音频并生成标记文件     #"
     echo "###################################"
-    ${BIN_DIR}/parse_sourceaudio.sh || exit -1;
+    echo 'start split source wav files'
+    start_asr_server.sh &> exp/log/streaming_asr.log&
+    ${BIN_DIR}/parse_sourceaudio.sh LJ_Voice.wav || exit -1;
+    echo 'generate labels'
+    py.sh &> exp/log/generate_labels.log&
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
@@ -50,7 +54,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     echo "#   常发音                        #"
     echo "###################################"
     echo "检查预制文件"
-    python3 ${UTILS_DIR}/check_oov.py \
+    python ${UTILS_DIR}/check_oov.py \
         --input_dir=${VOICE_INPUT_DIR} \
         --pretrained_model_dir=${PRE_MODEL_DIR} \
         --newdir_name=${NEW_DIR_NAME} \
@@ -63,7 +67,7 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     echo "###################################"
     echo "#### STEP 2.开始mfa对齐操作 #######"
     echo "###################################"
-    python3 ${UTILS_DIR}/get_mfa_result.py \
+    python ${UTILS_DIR}/get_mfa_result.py \
         --input_dir=${NEW_DIR} \
         --mfa_dir=${MFA_DIR} \
         --lang=${LANG}
@@ -74,7 +78,7 @@ if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     echo "###################################"
     echo "#### STEP 3.生成durations.txt #######"
     echo "###################################"
-    python3 ${UTILS_DIR}/generate_duration.py \
+    python ${UTILS_DIR}/generate_duration.py \
         --mfa_dir=${MFA_DIR} \
         --durations_file=${DURATIONS_FILE}
 fi
@@ -84,7 +88,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "###################################"
     echo "#### STEP 4.展开特征文件 #######"
     echo "###################################"
-    python3 ${UTILS_DIR}/extract_feature.py \
+    python ${UTILS_DIR}/extract_feature.py \
         --duration_file=${DURATIONS_FILE} \
         --input_dir=${NEW_DIR} \
         --dump_dir=${DUMP_DIR} \
@@ -98,7 +102,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "#### STEP 5.准备finetune的环境 #######"
     echo "###################################"
     echo "create finetune env"
-    python3 ${UTILS_DIR}/prepare_env.py \
+    python ${UTILS_DIR}/prepare_env.py \
         --pretrained_model_dir=${PRE_MODEL_DIR} \
         --output_dir=${FINETUNE_OUT}
 fi
@@ -106,7 +110,7 @@ fi
 # finetune
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     echo "finetune..."
-    python3 ${UTILS_DIR}/finetune.py \
+    python ${UTILS_DIR}/finetune.py \
         --pretrained_model_dir=${PRE_MODEL_DIR} \
         --dump_dir=${DUMP_DIR} \
         --output_dir=${FINETUNE_OUT} \

@@ -5,8 +5,7 @@ import pypinyin
 import paddle
 import librosa
 import soundfile as sf
-from paddlespeech.cli.asr.infer import ASRExecutor
-from pypinyin import pinyin, Style, lazy_pinyin
+from paddlespeech.server.bin.paddlespeech_client import ASROnlineClientExecutor
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 from pathlib import Path
@@ -14,63 +13,63 @@ from typing import Union
 import logging
 
 logging.getLogger("PaddleSpeech").setLevel(logging.WARNING)
-def split_wav(input_dir: Union[str,Path],
+def split_wav(wave_file: Union[str,Path],
               output_dir: Union[str,Path]
               ):
-    input_dir = Path(input_dir)
+    wave_file = Path(wave_file)
     output_dir = Path(output_dir)
-    print(input_dir)
-    f_list = os.listdir(input_dir)
-    for file in f_list:
-        if os.path.splitext(file)[1] == '.wav':
-            file = os.path.join(input_dir,file)
-            print('start split wave files %s' % file)
-            aud = AudioSegment.from_wav(file)
-            loudness = aud.dBFS
-            chunks = split_on_silence(aud,
-                                      min_silence_len=1500,
-                                      silence_thresh=loudness - 6,
-                                      keep_silence=True,
-                                      seek_step=1
-                                      )
-            file = os.path.split(file)[1]
-            split_name = os.path.splitext(file)[0]
-            split_dir = Path(output_dir).joinpath(str(split_name))
-            print('in directory %s split wave file' % split_dir)
-            split_dir.mkdir(parents=True,exist_ok=True)
+    print("start parse audio {}".format(wave_file))
+    if os.path.splitext(wave_file)[1] == '.wav':
+        print('start split wave files{}'.format(wave_file))
+        aud = AudioSegment.from_wav(wave_file)
+        loudness = aud.dBFS
+        chunks = split_on_silence(aud,
+                                  min_silence_len=1500,
+                                  silence_thresh=loudness - 6,
+                                  keep_silence=True,
+                                  seek_step=1
+                                  )
+        file = os.path.split(wave_file)[1]
+        split_name = os.path.splitext(file)[0]
+        split_dir = Path(output_dir).joinpath(str(split_name))
+        print('Split wave file to {}'.format(split_dir))
+        split_dir.mkdir(parents=True, exist_ok=True)
 
-            #分割音频文件
-            temp_cont_word = []
-            for i, chunk in enumerate(chunks):
-                chunk.export("{0}/{1:05}.wav".format(split_dir, i + 1), format="wav")
-                audio_44k, sr = librosa.load("{0}/{1:05}.wav".format(split_dir, i + 1),44100)
-                audio_16K = librosa.resample(audio_44k,orig_sr=sr,target_sr=16000)
-                sf.write("{0}/{1:05}.wav".format(split_dir, i + 1),audio_16K,16000)
-                print("chunk file {0:05}.wav".format(i+1))
-                temp_cont_word.append(asr_wav("{0}/{1:05}.wav".format(split_dir, i + 1)))
-            print("exported {0} chunks.".format(i + 1))
-            #分割的音频转文字
-            content_txt = Path(split_dir).joinpath("content.txt")
+        # 分割音频文件
+        temp_cont_word = []
+        sig, samplerate = sf.read(wave_file)
+        for i, chunk in enumerate(chunks):
+            split_wave_name = "{0}/{1:05}.wav".format(split_dir, i + 1)
+            chunk.export(split_wave_name, format="wav")
+            if samplerate != 16000:
+                audio_src,sr = librosa.load(split_wave_name,samplerate)
+                audio_16_K = librosa.resample(audio_src, orig_sr=sr, target_sr=16000)
+                sf.write(split_wave_name, audio_16_K, 16000)
+            print("chunk file {0}".format(split_wave_name))
+            temp_cont_word.append(asr_wav(split_wave_name))
+        print("exported {0} chunks.".format(i + 1))
+        # 分割的音频转文字
+        content_txt = Path(split_dir).joinpath("content.txt")
 
-            with open(content_txt,"w",encoding='utf-8') as f:
-                for line in temp_cont_word:
-                    f.write(line+"\n")
-            f.close()
+        with open(content_txt, "w", encoding='utf-8') as f:
+            for line in temp_cont_word:
+                f.write(line + "\n")
+        f.close()
+
 
 
 
 #语音识别出结果
 def asr_wav(wavefile):
-    asr_executor = ASRExecutor()
-    text = asr_executor(
-        model='conformer_wenetspeech',
-        lang='zh',
+    asrclient_executor = ASROnlineClientExecutor()
+    res = asrclient_executor(
+        input=wavefile,
+        server_ip="127.0.0.1",
+        port=8190,
         sample_rate=16000,
-        config=None,  # Set `config` and `ckpt_path` to None to use pretrained model.
-        ckpt_path=None,
-        audio_file=wavefile,
-        force_yes=True)
-    return text
+        lang="zh_cn",
+        audio_format="wav")
+    return res
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -88,10 +87,15 @@ if __name__ == '__main__':
         default="../../output/splits",
         help="directory split audio")
 
+    parser.add_argument(
+        "--audio_name",
+        type=str,
+        default="audio.wav",
+        help="which wave file you want parse to train")
     args = parser.parse_args()
 
-    input_dir = Path(args.input_dir)
+    wave_file = Path(args.input_dir + '/'+args.audio_name)
     output_dir = Path(args.output_dir)
     split_wav(
-        input_dir=input_dir,
+        wave_file=wave_file,
         output_dir=output_dir)

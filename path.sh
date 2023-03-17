@@ -11,4 +11,6 @@ export PYTHONPATH=${MAIN_ROOT}:${PYTHONPATH}
 export BIN_DIR=${MAIN_ROOT}/local/bin
 export UTILS_DIR=${MAIN_ROOT}/local/utils
 export TOOLS_DIR=${MAIN_ROOT}/local/tools
+export CONF_DIR=${MAIN_ROOT}/conf
+export LOG_DIR=${MAIN_ROOT}/exp/log
 
