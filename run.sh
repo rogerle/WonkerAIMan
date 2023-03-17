@@ -9,7 +9,7 @@ stage=0
 stop_stage=100
 
 #微调需要训练的语音的文件
-VOICE_INPUT_DIR=output/LJ_Voice
+VOICE_INPUT_DIR=output/LJ_Voice #这里要调整把需要训练的音频文件名设置成输出目录，两者要同名
 NEW_DIR_NAME='newdir'
 NEW_DIR=${VOICE_INPUT_DIR}/${NEW_DIR_NAME}
 MFA_DIR=output/mfa_result
@@ -17,18 +17,29 @@ DURATIONS_FILE=output/durations.txt
 DUMP_DIR=output/dump
 FINETUNE_OUT=exp/output
 FINETUNE_CONFIG=conf/finetune.yaml
-REPLACE_SPKID=21 # csmsc: 174, ljspeech: 175, aishell3: 0~173, vctk: 176
+REPLACE_SPKID=174 # csmsc: 174, ljspeech: 175, aishell3: 0~173, vctk: 176
 
-PRE_AM_TRAIN_MODEL="fs2_aishell3" #参数可以设置成（fs2_aishell3,fs2_cmscm,fs2_mix,fs2_vctk）
-PRE_VOC_TRAIN_MODEL="hifigan_aishell3" #参数可以设置成（hifigan_aishell3,hifigan_vctk）
+PRE_AM_TRAIN_MODEL="fs2_cmscm" #参数可以设置成（fs2_aishell3,fs2_cmscm,fs2_mix,fs2_vctk）
+PRE_VOC_TRAIN_MODEL="hifigan_aishell3" #参数可以设置成（hifigan_aishell3,hifigan_vctk,hifigan_vctk）
 PRE_MODEL_DIR=data/pretrain_models
+PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}
+PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}
 
 LANG='zh'
 
-#define model parameters
-if [ ${PRE_AM_TRAIN_MODEL} == "fs2_aishell3" ] || [ ${PRE_AM_TRAIN_MODEL} == "fs2_cmscm" ];
+#define am_model parameters
+if [ ${PRE_AM_TRAIN_MODEL} == "fs2_aishell3" ];
 then
-  PRE_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_aishell3_ckpt_1.1.0
+  PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_aishell3_ckpt_1.1.0
+  PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/hifigan_aishell3_ckpt_0.2.0
+elif  [ ${PRE_AM_TRAIN_MODEL} == "fs2_cmscm" ];
+then
+  PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_nosil_baker_ckpt_0.4
+  PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/hifigan_csmsc_ckpt_0.1.1
+elif  [ ${PRE_AM_TRAIN_MODEL} == "fs2_mix" ];
+then
+  PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_mix_ckpt_1.2.0
+  PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/hifigan_aishell3_ckpt_0.2.0
 fi
 
 # with the following command, you can choose the stage range you want to run
@@ -56,7 +67,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     echo "检查预制文件"
     python ${UTILS_DIR}/check_oov.py \
         --input_dir=${VOICE_INPUT_DIR} \
-        --pretrained_model_dir=${PRE_MODEL_DIR} \
+        --pretrained_model_dir=${PRE_AM_MODEL_DIR} \
         --newdir_name=${NEW_DIR_NAME} \
         --lang=${LANG}
     echo "检查结束"
@@ -92,7 +103,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
         --duration_file=${DURATIONS_FILE} \
         --input_dir=${NEW_DIR} \
         --dump_dir=${DUMP_DIR} \
-        --pretrained_model_dir=${PRE_MODEL_DIR} \
+        --pretrained_model_dir=${PRE_AM_MODEL_DIR} \
         --replace_spkid=${REPLACE_SPKID}
 fi
 
@@ -103,7 +114,7 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "###################################"
     echo "create finetune env"
     python ${UTILS_DIR}/prepare_env.py \
-        --pretrained_model_dir=${PRE_MODEL_DIR} \
+        --pretrained_model_dir=${PRE_AM_MODEL_DIR} \
         --output_dir=${FINETUNE_OUT}
 fi
 
@@ -111,7 +122,7 @@ fi
 if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     echo "finetune..."
     python ${UTILS_DIR}/finetune.py \
-        --pretrained_model_dir=${PRE_MODEL_DIR} \
+        --pretrained_model_dir=${PRE_AM_MODEL_DIR} \
         --dump_dir=${DUMP_DIR} \
         --output_dir=${FINETUNE_OUT} \
         --ngpu=${GPU_NUM} \
