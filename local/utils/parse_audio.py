@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Union
 import logging
 
-logging.getLogger("PaddleSpeech").setLevel(logging.WARNING)
+#logging.getLogger("PaddleSpeech").setLevel(logging.WARNING)
 
 
 def split_wav(wave_file: Union[str, Path],
@@ -26,7 +26,7 @@ def split_wav(wave_file: Union[str, Path],
         aud = AudioSegment.from_wav(wave_file)
         loudness = aud.dBFS
         chunks = split_on_silence(aud,
-                                  min_silence_len=1600,
+                                  min_silence_len=2000,
                                   silence_thresh=loudness-20,
                                   keep_silence=True,
                                   seek_step=1
