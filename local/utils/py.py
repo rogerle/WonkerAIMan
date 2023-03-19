@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # 输出拼音字符
 import argparse
+import os
 from pypinyin import Style, lazy_pinyin
 from pathlib import Path
 from typing import Union
@@ -9,9 +10,11 @@ import sys
 
 # 生成音调文件
 def gen_label_txt(content_txt: Union[str, Path],
-                  labels_txt: Union[str, Path]
+                  labels_txt: Union[str, Path],
+                  voice_name
                   ):
     temp_py_word = []
+
     with open(content_txt, "r", encoding='utf-8') as f:
         for line in f.readlines():
             result = lazy_pinyin(line, style=Style.TONE3, neutral_tone_with_five=True)
@@ -22,7 +25,7 @@ def gen_label_txt(content_txt: Union[str, Path],
         i = 0
         for line in temp_py_word:
             i = i + 1
-            head = '{0:05}'.format(i) + '|'
+            head = '{0}{1:04}'.format(voice_name, i) + '|'
             fw.write(head + line)
     fw.close()
     print('labels created')
@@ -44,8 +47,16 @@ if __name__ == '__main__':
         type=str,
         default="../../output/labels.txt",
         help="directory split audio")
+
+    parser.add_argument(
+        "--voice_name",
+        type=str,
+        default="../../output/labels.txt",
+        help="directory split audio")
+
     args = parser.parse_args()
 
     content_txt = Path(args.content_txt)
     labels_txt = Path(args.labels_txt)
-    gen_label_txt(content_txt, labels_txt)
+    voice_name = args.voice_name
+    gen_label_txt(content_txt, labels_txt, voice_name)

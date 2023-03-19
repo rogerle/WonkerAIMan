@@ -13,4 +13,5 @@ export UTILS_DIR=${MAIN_ROOT}/local/utils
 export TOOLS_DIR=${MAIN_ROOT}/local/tools
 export CONF_DIR=${MAIN_ROOT}/conf
 export LOG_DIR=${MAIN_ROOT}/exp/log
+export SOURCE_DIR=${MAIN_ROOT}/data/source
 

@@ -9,7 +9,8 @@ stage=0
 stop_stage=100
 
 #微调需要训练的语音的文件
-VOICE_INPUT_DIR=output/LJ_Voice #这里要调整把需要训练的音频文件名设置成输出目录，两者要同名
+VOICE_NAME=SSB0590
+VOICE_INPUT_DIR=output/${VOICE_NAME} #这里要调整把需要训练的音频文件名设置成输出目录，两者要同名
 NEW_DIR_NAME='newdir'
 NEW_DIR=${VOICE_INPUT_DIR}/${NEW_DIR_NAME}
 MFA_DIR=output/mfa_result
@@ -17,10 +18,15 @@ DURATIONS_FILE=output/durations.txt
 DUMP_DIR=output/dump
 FINETUNE_OUT=exp/output
 FINETUNE_CONFIG=conf/finetune.yaml
-REPLACE_SPKID=174 # csmsc: 174, ljspeech: 175, aishell3: 0~173, vctk: 176
-
-PRE_AM_TRAIN_MODEL="fs2_cmscm" #参数可以设置成（fs2_aishell3,fs2_cmscm,fs2_mix,fs2_vctk）
-PRE_VOC_TRAIN_MODEL="hifigan_aishell3" #参数可以设置成（hifigan_aishell3,hifigan_vctk,hifigan_vctk）
+CKPT=snapshot_iter_97447
+REPLACE_SPKID=65 # csmsc: 0, ljspeech: 175, aishell3: 0~173, vctk: 176
+# AM参数可以设置成
+# fastspeech2_csmsc,speedyspeech_csmsc,speedyspeech_aishell3,fastspeech2_ljspeech,fastspeech2_aishell3,fastspeech2_vctk'
+# tacotron2_csmsc,tacotron2_ljspeech,fastspeech2_mix,fastspeech2_canton,fastspeech2_male-zh,fastspeech2_male-en,fastspeech2_male-mix
+PRE_AM_TRAIN_MODEL="fastspeech2_aishell3"
+# VOC参数可以设置成 'pwgan_csmsc','pwgan_ljspeech','pwgan_aishell3', 'pwgan_vctk','mb_melgan_csmsc', 'style_melgan_csmsc',
+# 'hifigan_csmsc','hifigan_ljspeech','hifigan_aishell3','hifigan_vctk','wavernn_csmsc','pwgan_male','hifigan_male',
+PRE_VOC_TRAIN_MODEL="hifigan_aishell3"
 PRE_MODEL_DIR=data/pretrain_models
 PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}
 PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}
@@ -28,22 +34,28 @@ PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}
 LANG='zh'
 
 #define am_model parameters
-if [ ${PRE_AM_TRAIN_MODEL} == "fs2_aishell3" ];
+if [ ${PRE_AM_TRAIN_MODEL} == "fastspeech2_aishell3" ];
 then
   PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_aishell3_ckpt_1.1.0
   PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/hifigan_aishell3_ckpt_0.2.0
-elif  [ ${PRE_AM_TRAIN_MODEL} == "fs2_cmscm" ];
+elif  [ ${PRE_AM_TRAIN_MODEL} == "fastspeech2_csmsc" ];
 then
   PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_nosil_baker_ckpt_0.4
   PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/hifigan_csmsc_ckpt_0.1.1
-elif  [ ${PRE_AM_TRAIN_MODEL} == "fs2_mix" ];
+elif  [ ${PRE_AM_TRAIN_MODEL} == "fastspeech2_mix" ];
 then
   PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_mix_ckpt_1.2.0
   PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/hifigan_aishell3_ckpt_0.2.0
+
+elif  [ ${PRE_AM_TRAIN_MODEL} == "fastspeech2_male-mix" ];
+then
+  PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_male_mix_ckpt_1.4.0
+  PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/pwg_male_ckpt_1.4.0
+
 fi
 
 # with the following command, you can choose the stage range you want to run
-# such as `./run.sh --stage 0 --stop-stage 0`
+# such as `./fintune_aino.sh --stage 0 --stop-stage 0`
 # this can not be mixed use with `$1`, `$2` ...
 source ${BIN_DIR}/parse_options.sh || exit 1
 
@@ -54,12 +66,18 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "###################################"
     echo 'start split source wav files'
     start_asr_server.sh &> exp/log/streaming_asr.log&
-    ${BIN_DIR}/parse_sourceaudio.sh LJ_Voice.wav || exit -1;
-    echo 'generate labels'
-    py.sh &> exp/log/generate_labels.log&
+    sleep 10
+    ${BIN_DIR}/parse_sourceaudio.sh ${VOICE_NAME}.wav || exit -1;
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
+    echo 'generate labels'
+    python  ${UTILS_DIR}/py.py --content_txt=${VOICE_INPUT_DIR}/content.txt \
+              --labels_txt=${VOICE_INPUT_DIR}/labels.txt \
+              --voice_name=$VOICE_NAME
+fi
+
+if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
     echo "###################################"
     echo "# STEP 2.检查labels里面是否有异   #"
     echo "#   常发音                        #"
@@ -74,7 +92,7 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 fi
 
 ##开始mfa对齐操作
-if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
+if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
     echo "###################################"
     echo "#### STEP 2.开始mfa对齐操作 #######"
     echo "###################################"
@@ -85,17 +103,19 @@ if [ ${stage} -le 2 ] && [ ${stop_stage} -ge 2 ]; then
 fi
 
 ##生成durations.txt
-if [ ${stage} -le 3 ] && [ ${stop_stage} -ge 3 ]; then
+if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
     echo "###################################"
     echo "#### STEP 3.生成durations.txt #######"
     echo "###################################"
     python ${UTILS_DIR}/generate_duration.py \
         --mfa_dir=${MFA_DIR} \
         --durations_file=${DURATIONS_FILE}
+
+    echo 'durations.txt done!'
 fi
 
 ##展开特征文件
-if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
+if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
     echo "###################################"
     echo "#### STEP 4.展开特征文件 #######"
     echo "###################################"
@@ -108,7 +128,7 @@ if [ ${stage} -le 4 ] && [ ${stop_stage} -ge 4 ]; then
 fi
 
 # create finetune env
-if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
+if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
     echo "###################################"
     echo "#### STEP 5.准备finetune的环境 #######"
     echo "###################################"
@@ -119,13 +139,36 @@ if [ ${stage} -le 5 ] && [ ${stop_stage} -ge 5 ]; then
 fi
 
 # finetune
-if [ ${stage} -le 6 ] && [ ${stop_stage} -ge 6 ]; then
+if [ ${stage} -le 7 ] && [ ${stop_stage} -ge 7 ]; then
     echo "finetune..."
     python ${UTILS_DIR}/finetune.py \
         --pretrained_model_dir=${PRE_AM_MODEL_DIR} \
         --dump_dir=${DUMP_DIR} \
         --output_dir=${FINETUNE_OUT} \
         --ngpu=${GPU_NUM} \
-        --epoch=110 \
+        --epoch=150 \
         --finetune_config=${FINETUNE_CONFIG}
 fi
+
+# synthesize e2e
+if [ ${stage} -le 8 ] && [ ${stop_stage} -ge 8 ]; then
+  python ${UTILS_DIR}/synthesize_e2e.py \
+        --am=${PRE_AM_TRAIN_MODEL} \
+        --am_config=${PRE_AM_MODEL_DIR}/default.yaml \
+        --am_ckpt=${FINETUNE_OUT}/checkpoints/${CKPT}.pdz \
+        --am_stat=${PRE_AM_MODEL_DIR}/speech_stats.npy \
+        --voc=${PRE_VOC_TRAIN_MODEL} \
+        --voc_config=${PRE_VOC_MODEL_DIR}/default.yaml \
+        --voc_ckpt=${PRE_VOC_MODEL_DIR}/snapshot_iter_2500000.pdz \
+        --voc_stat=${PRE_VOC_MODEL_DIR}/feats_stats.npy \
+        --lang=mix \
+        --text=${SOURCE_DIR}/sentences_mix.txt \
+        --output_dir=output/test_e2e \
+        --phones_dict=${DUMP_DIR}/phone_id_map.txt \
+        --speaker_dict=${DUMP_DIR}/speaker_id_map.txt \
+        --spk_id=${REPLACE_SPKID}
+fi
+
+ps -ef | grep asr_server | awk '{print $2}' | xargs kill -9
+
+

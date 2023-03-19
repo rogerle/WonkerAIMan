@@ -13,8 +13,10 @@ from typing import Union
 import logging
 
 logging.getLogger("PaddleSpeech").setLevel(logging.WARNING)
-def split_wav(wave_file: Union[str,Path],
-              output_dir: Union[str,Path]
+
+
+def split_wav(wave_file: Union[str, Path],
+              output_dir: Union[str, Path]
               ):
     wave_file = Path(wave_file)
     output_dir = Path(output_dir)
@@ -24,8 +26,8 @@ def split_wav(wave_file: Union[str,Path],
         aud = AudioSegment.from_wav(wave_file)
         loudness = aud.dBFS
         chunks = split_on_silence(aud,
-                                  min_silence_len=1500,
-                                  silence_thresh=loudness - 6,
+                                  min_silence_len=1600,
+                                  silence_thresh=loudness-20,
                                   keep_silence=True,
                                   seek_step=1
                                   )
@@ -39,10 +41,11 @@ def split_wav(wave_file: Union[str,Path],
         temp_cont_word = []
         sig, samplerate = sf.read(wave_file)
         for i, chunk in enumerate(chunks):
-            split_wave_name = "{0}/{1:05}.wav".format(split_dir, i + 1)
+            split_wave_name = "{0}/{1}{2:04}.wav".format(split_dir, split_name, i + 1)
+            print("start chunk file {}".format(split_wave_name))
             chunk.export(split_wave_name, format="wav")
             if samplerate != 16000:
-                audio_src,sr = librosa.load(split_wave_name,samplerate)
+                audio_src, sr = librosa.load(split_wave_name, samplerate)
                 audio_16_K = librosa.resample(audio_src, orig_sr=sr, target_sr=16000)
                 sf.write(split_wave_name, audio_16_K, 16000)
             print("chunk file {0}".format(split_wave_name))
@@ -57,9 +60,7 @@ def split_wav(wave_file: Union[str,Path],
         f.close()
 
 
-
-
-#语音识别出结果
+# 语音识别出结果
 def asr_wav(wavefile):
     asrclient_executor = ASROnlineClientExecutor()
     res = asrclient_executor(
@@ -70,6 +71,7 @@ def asr_wav(wavefile):
         lang="zh_cn",
         audio_format="wav")
     return res
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -94,7 +96,7 @@ if __name__ == '__main__':
         help="which wave file you want parse to train")
     args = parser.parse_args()
 
-    wave_file = Path(args.input_dir + '/'+args.audio_name)
+    wave_file = Path(args.input_dir + '/' + args.audio_name)
     output_dir = Path(args.output_dir)
     split_wav(
         wave_file=wave_file,

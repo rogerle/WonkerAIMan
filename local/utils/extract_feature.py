@@ -86,6 +86,7 @@ def get_map(duration_file: Union[str, Path],
             spk_dict[spk_id] = spk
 
     # replace spk on spkid-spk dict
+    print ('total speak id num {}'.format(len(spk_dict)))
     assert replace_spkid + num - 1 < len(
         spk_dict), "Please set correct replace spk id."
     for i, spk in enumerate(speakers):
