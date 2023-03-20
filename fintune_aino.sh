@@ -18,7 +18,7 @@ DURATIONS_FILE=output/durations.txt
 DUMP_DIR=output/dump
 FINETUNE_OUT=exp/output
 FINETUNE_CONFIG=conf/finetune.yaml
-CKPT=snapshot_iter_99967
+CKPT=snapshot_iter_106960
 REPLACE_SPKID=65 # csmsc: 0, ljspeech: 175, aishell3: 0~173, vctk: 176
 # AM参数可以设置成
 # fastspeech2_csmsc,speedyspeech_csmsc,speedyspeech_aishell3,fastspeech2_ljspeech,fastspeech2_aishell3,fastspeech2_vctk'
@@ -26,7 +26,7 @@ REPLACE_SPKID=65 # csmsc: 0, ljspeech: 175, aishell3: 0~173, vctk: 176
 PRE_AM_TRAIN_MODEL="fastspeech2_aishell3"
 # VOC参数可以设置成 'pwgan_csmsc','pwgan_ljspeech','pwgan_aishell3', 'pwgan_vctk','mb_melgan_csmsc', 'style_melgan_csmsc',
 # 'hifigan_csmsc','hifigan_ljspeech','hifigan_aishell3','hifigan_vctk','wavernn_csmsc','pwgan_male','hifigan_male',
-PRE_VOC_TRAIN_MODEL="pwgan_aishell3"
+PRE_VOC_TRAIN_MODEL="hifigan_aishell3"
 PRE_MODEL_DIR=data/pretrain_models
 PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}
 PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}
@@ -37,7 +37,8 @@ LANG='zh'
 if [ ${PRE_AM_TRAIN_MODEL} == "fastspeech2_aishell3" ];
 then
   PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_aishell3_ckpt_1.1.0
-  PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/pwg_aishell3_ckpt_0.5
+  PRE_VOC_MODEL_DIR=${PRE_MODEL_DIR}/hifigan_aishell3_ckpt_0.2.0
+
 elif  [ ${PRE_AM_TRAIN_MODEL} == "fastspeech2_csmsc" ];
 then
   PRE_AM_MODEL_DIR=${PRE_MODEL_DIR}/fastspeech2_nosil_baker_ckpt_0.4
@@ -212,7 +213,7 @@ if [ ${stage} -le 9 ] && [ ${stop_stage} -ge 9 ]; then
         --am_stat=${DUMP_DIR}/train/speech_stats.npy \
         --voc=${PRE_VOC_TRAIN_MODEL} \
         --voc_config=${PRE_VOC_MODEL_DIR}/default.yaml \
-        --voc_ckpt=${PRE_VOC_MODEL_DIR}/snapshot_iter_1000000.pdz \
+        --voc_ckpt=${PRE_VOC_MODEL_DIR}/snapshot_iter_2500000.pdz \
         --voc_stat=${PRE_VOC_MODEL_DIR}/feats_stats.npy \
         --lang=mix \
         --text=${SOURCE_DIR}/sentences_mix.txt \
