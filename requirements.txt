@@ -2,3 +2,12 @@ paddleaudio==1.0.1
 paddlepaddle==2.4.2 -i https://pypi.tuna.tsinghua.edu.cn/simple
 paddlespeech
 paddlehub
+librosa==0.7.0
+numpy==1.17.1
+opencv-contrib-python>=4.2.0.34
+opencv-python==4.3.0.38
+torch==1.1.0
+torchvision==0.3.0
+tqdm==4.45.0
+numba==0.48
+

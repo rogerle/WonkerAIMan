@@ -56,7 +56,7 @@ then
 fi
 
 # with the following command, you can choose the stage range you want to run
-# such as `./fintune_aino.sh --stage 0 --stop-stage 0`
+# such as `./finetune_all.sh --stage 0 --stop-stage 0`
 # this can not be mixed use with `$1`, `$2` ...
 source ${BIN_DIR}/parse_options.sh || exit 1
 
