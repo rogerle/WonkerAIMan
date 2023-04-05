@@ -5,7 +5,7 @@ if sys.version_info[0] < 3 and sys.version_info[1] < 2:
 
 from os import listdir, path
 
-if not path.isfile('data_root/sfd/s3fd.pth'):
+if not path.isfile('data/sfd/s3fd.pth'):
 	raise FileNotFoundError('Save the s3fd model to face_detection/detection/sfd/s3fd.pth \
 							before running this script!')
 
@@ -23,7 +23,7 @@ import face_detection
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--ngpu', help='Number of GPUs across which to run in parallel', default=1, type=int)
-parser.add_argument('--batch_size', help='Single GPU Face detection batch size', default=32, type=int)
+parser.add_argument('--batch_size', help='Single GPU Face detection batch size', default=8, type=int)
 parser.add_argument("--data_root", help="Root folder of the LRS2 dataset", required=True)
 parser.add_argument("--preprocessed_root", help="Root folder of the preprocessed dataset", required=True)
 
@@ -91,7 +91,7 @@ def mp_handler(job):
 def main(args):
 	print('Started processing for {} with {} GPUs'.format(args.data_root, args.ngpu))
 
-	filelist = glob(path.join(args.data_root, '*.mp4'))
+	filelist = glob(path.join(args.data_root, '*/*.mp4'))
 
 	jobs = [(vfile, args, i%args.ngpu) for i, vfile in enumerate(filelist)]
 	p = ThreadPoolExecutor(args.ngpu)
