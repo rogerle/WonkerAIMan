@@ -172,7 +172,7 @@ def load_model(path):
 	s = checkpoint["state_dict"]
 	new_s = {}
 	for k, v in s.items():
-		new_s[k.replace('module.', '')] = v
+		new_s[k.replace('datasets.', '')] = v
 	model.load_state_dict(new_s)
 
 	model = model.to(device)

@@ -59,17 +59,17 @@ def main():
     if args.verbose > 1:
         logging.basicConfig(
             level=logging.DEBUG,
-            format="%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s"
+            format="%(asctime)s (%(datasets)s:%(lineno)d) %(levelname)s: %(message)s"
         )
     elif args.verbose > 0:
         logging.basicConfig(
             level=logging.INFO,
-            format="%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s"
+            format="%(asctime)s (%(datasets)s:%(lineno)d) %(levelname)s: %(message)s"
         )
     else:
         logging.basicConfig(
             level=logging.WARN,
-            format="%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s"
+            format="%(asctime)s (%(datasets)s:%(lineno)d) %(levelname)s: %(message)s"
         )
         logging.warning('Skip DEBUG/INFO messages')
 

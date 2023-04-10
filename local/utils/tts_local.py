@@ -89,31 +89,31 @@ if __name__ == '__main__':
         "--tones_dict",
         type=str,
         default=None,
-        help="directory split audio")
+        help="tone dict")
 
     parser.add_argument(
         "--voc",
         type=str,
         default="pwgan_csmsc",
-        help="directory split audio")
+        help="音调训练模型")
 
     parser.add_argument(
         "--voc_config",
         type=str,
         default=None,
-        help="directory split audio")
+        help="音调配置文件")
 
     parser.add_argument(
         "--voc_ckpt",
         type=str,
         default=None,
-        help="directory split audio")
+        help="voc的checkpoint")
 
     parser.add_argument(
         "--voc_stat",
         type=str,
         default=None,
-        help="directory split audio")
+        help="voc的状态")
 
     parser.add_argument(
         "--lang",
